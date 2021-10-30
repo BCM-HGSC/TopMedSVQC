@@ -30,7 +30,7 @@ This is just a `reference.fa.fai`. Ours is `grch38.genome.txt` in notes below
 bedtools makewindows -w 100000 -g grch38.genome.txt -i winnum > grch38.100kbwin.bed
 ```
 
-NOTE! I removed sex chromosomes manually from the genome bed because topmed does not have calls there.
+**NOTE!** I removed sex chromosomes manually from the genome bed because topmed does not have calls there.
 
 ## Remove the telomeres/centromeres/gaps
 Download gap and centromere mapping tracks for grch38 from UCSC Table Browser, concatenate, and sort
