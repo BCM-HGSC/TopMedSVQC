@@ -1,51 +1,68 @@
 # Deserts and Hotspots analysis
 
+Goal is to find regions of the genome that have Fewer or More SVs than would be expected.
+
+# Method description from Shaohua Fan
+1. split human reference genome into 100 kb windows by "bedtools makewindows"
+2. calculate SV number in each window using "bedtools intersect -a genome_window.bed -b sv.bed -c"
+3. a window containging > XX (mean + 3* standard deviation) SVs is defined as a hotspot
+4. we define a window that does not contain any SV as a desert
+
 # Steps
 ##  Turn VCFs into BED
-
+TopMed Data
+```bash
 bcftools query -i "SVLEN >= 50 || SVLEN <= -50" -f "%CHROM\t%POS\t%END\n" ../call_only_vcfs/topmed.DEL.vcf.gz \
 	| bedtools sort | bgzip > topmed.DEL.bed.gz
-
-2) Make the control data. Until I get HGSV or whatever, I'll use my msru
+```
+Until I get HGSV or whatever, I'll use my msru as control data
+```bash
 bcftools query -i "SVLEN >= 50 || SVLEN <= -50" -i "SVTYPE == 'DEL'" -f "%CHROM\t%POS\t%END\n" \
-~/scratch/insertion_ref/msru/data/inter_merge/grch38/strict/strict.vcf.gz | bedtools sort | bgzip > control.DEL.bed.gz
+    ~/scratch/insertion_ref/msru/data/inter_merge/grch38/strict/strict.vcf.gz \
+    | bedtools sort | bgzip > control.DEL.bed.gz
+```
 
-3) Here's the notes of what we're trying to do
-the method we used in our paper for your reference:
-  1. split human reference genome into 100 kb windows by "bedtools makewindows"
-	$ bedtools makewindows -w 100000 -g grch38.genome.txt -i winnum > grch38.100kbwin.bed
+## Get genome file
+This is just a `reference.fa.fai`. Ours is `grch38.genome.txt` in notes below
 
-###NOTE! I removed sex chromosomes manually from the genome bed because topmed does not have calls on it
-# Also, the following steps are for documentation only. I don't run any of these commands
+## Make Windows
+```bash
+bedtools makewindows -w 100000 -g grch38.genome.txt -i winnum > grch38.100kbwin.bed
+```
 
-  2. calculate SV number in each window using "bedtools intersect -a genome_window.bed -b sv.bed -c"
-	bedtools intersect -a grch38.100kbwin.bed -b control.DEL.bed.gz -c > control.del_svperwindow.bed
+NOTE! I removed sex chromosomes manually from the genome bed because topmed does not have calls there.
 
-  3. a window containging `> XX (mean + 3* standard deviation)` SVs is defined as a hotspot
+## Remove the telomeres/centromeres/gaps
+Download gap and centromere mapping tracks for grch38 from UCSC Table Browser, concatenate, and sort
 
-  4. we define a window that does not contain any SV as a desert
-
-
-4) But first, I'm going to add a step to remove the telomeres/centromeres/gaps
-I won't worry about expanding the regions too much, I reckon
-Download gap and centromere mapping tracks for grch38 from UCSC Table Browser
-Concatenate, and sort
-
-cat <(cut -f1,2,3 grch38.centromeres.bed) grch38.gap.bed | bedtools sort | bgzip > grch38.exclude_regions.bed.gz
+```bash
+cat <(cut -f1,2,3 grch38.centromeres.bed) grch38.gap.bed \
+    | bedtools sort \
+    | bgzip > grch38.exclude_regions.bed.gz
+```
 
 Then subtract from the windows
 
-bedtools subtract -A -a grch38.100kbwin.bed -b grch38.exclude_regions.bed.gz | bedtools sort | bgzip > grch38.100kbwin.regions_excluded.bed.gz
+```bash
+bedtools subtract -A -a grch38.100kbwin.bed -b grch38.exclude_regions.bed.gz \
+    | bedtools sort \
+    | bgzip > grch38.100kbwin.regions_excluded.bed.gz
+```
 
-4) Now I need to run the window intersection with the SVs
-$ bedtools intersect -a grch38.100kbwin.regions_excluded.bed.gz  -b control.DEL.bed.gz -c > control.del_svperwindow.bed
+## Run intersection
 
-$ bedtools intersect -a grch38.100kbwin.regions_excluded.bed.gz  -b topmed.DEL.bed.gz -c > topmed.del_svperwindow.bed
+```bash
+bedtools intersect -a grch38.100kbwin.regions_excluded.bed.gz  -b control.DEL.bed.gz -c > control.del_svperwindow.bed
+bedtools intersect -a grch38.100kbwin.regions_excluded.bed.gz  -b topmed.DEL.bed.gz -c > topmed.del_svperwindow.bed
+```
 
-5) I have a custom sccript to annotate this bed file (steps 3.3 and 3.4 above)
-    $ python hotspotDesert.py control.del_svperwindow.bed control.del_svperwindow_anno.bed
-    $ python hotspotDesert.py topmed.del_svperwindow.bed topmed.del_svperwindow_anno.bed
-
+## Annotate the regions 
+```bash
+python hotspotDesert.py control.del_svperwindow.bed control.del_svperwindow_anno.bed
+python hotspotDesert.py topmed.del_svperwindow.bed topmed.del_svperwindow_anno.bed
+```
+Results:
+```
 ### Control
 count    26792.000000
 mean         5.421954
@@ -77,10 +94,15 @@ Counts
 Des    502
 Hot    188
 Name: anno, dtype: int64
+```
 
+## Quick Summary 
+```bash
+paste control.del_svperwindow_anno.bed  topmed.del_svperwindow_anno.bed | cut -f6,12 | sort | uniq -c
+```
 
-6) Quick Summary 
-$ paste control.del_svperwindow_anno.bed  topmed.del_svperwindow_anno.bed | cut -f6,12 | sort | uniq -c
+Results:
+```
 	ctrl 	tpmd
   21071
     440         Des
@@ -92,9 +114,10 @@ $ paste control.del_svperwindow_anno.bed  topmed.del_svperwindow_anno.bed | cut 
       8 Hot     Des
       2 Hot     Hot
       1 anno    anno
+```
 
-
-# Note here's the summary WITHOUT gap/cent filtering
+Note here's the summary WITHOUT gap/cent filtering
+```
   	ctrl	tpmd
   21166
    1838         Des
@@ -106,12 +129,18 @@ $ paste control.del_svperwindow_anno.bed  topmed.del_svperwindow_anno.bed | cut 
      41 Hot     Des
       2 Hot     Hot
       1 anno    anno
+```
 
-And look at those interesting regions viao
-paste control.del_svperwindow_anno.bed  topmed.del_svperwindow_anno.bed | awk '{if ($6 == "Des" && $12 == "Des") print $0}'  > dry_candidates.bed
+## Finding interesting regions
+```bash
+paste control.del_svperwindow_anno.bed topmed.del_svperwindow_anno.bed \
+    | awk '{if ($6 == "Des" && $12 == "Des") print $0}'  > dry_candidates.bed
+```
 
-Annotate those with
+## Annotating Candidate Regions
+```bash
 ~/scratch/misc_software/AnnotSV/bin/AnnotSV -genomeBuild GRCh38 -outputDir annosv -SVinputFile dry_candidates.bed
+```
 
 
 of the 54 dry candidates 39 hit gene(s)
