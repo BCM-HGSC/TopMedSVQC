@@ -21,7 +21,7 @@ the method we used in our paper for your reference:
   2. calculate SV number in each window using "bedtools intersect -a genome_window.bed -b sv.bed -c"
 	bedtools intersect -a grch38.100kbwin.bed -b control.DEL.bed.gz -c > control.del_svperwindow.bed
 
-  3. a window containging > XX (mean + 3* standard deviation) SVs is defined as a hotspot
+  3. a window containging `> XX (mean + 3* standard deviation)` SVs is defined as a hotspot
 
   4. we define a window that does not contain any SV as a desert
 
@@ -108,4 +108,10 @@ $ paste control.del_svperwindow_anno.bed  topmed.del_svperwindow_anno.bed | cut 
       1 anno    anno
 
 And look at those interesting regions viao
-paste control.del_svperwindow_anno.bed  topmed.del_svperwindow_anno.bed | awk '{if ($6 == "Des" && $12 == "Des") print $0}'
+paste control.del_svperwindow_anno.bed  topmed.del_svperwindow_anno.bed | awk '{if ($6 == "Des" && $12 == "Des") print $0}'  > dry_candidates.bed
+
+Annotate those with
+~/scratch/misc_software/AnnotSV/bin/AnnotSV -genomeBuild GRCh38 -outputDir annosv -SVinputFile dry_candidates.bed
+
+
+of the 54 dry candidates 39 hit gene(s)
