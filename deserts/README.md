@@ -5,20 +5,30 @@ Goal is to find regions of the genome that have Fewer or More SVs than would be 
 # Method description from Shaohua Fan
 1. split human reference genome into 100 kb windows by "bedtools makewindows"
 2. calculate SV number in each window using "bedtools intersect -a genome_window.bed -b sv.bed -c"
-3. a window containging > XX (mean + 3* standard deviation) SVs is defined as a hotspot
+3. a window containging `> XX (mean + 3* standard deviation)` SVs is defined as a hotspot
 4. we define a window that does not contain any SV as a desert
 
 # Steps
+
 ##  Turn VCFs into BED
 TopMed Data
 ```bash
 bcftools query -i "SVLEN >= 50 || SVLEN <= -50" -f "%CHROM\t%POS\t%END\n" ../call_only_vcfs/topmed.DEL.vcf.gz \
 	| bedtools sort | bgzip > topmed.DEL.bed.gz
 ```
+
 Until I get HGSV or whatever, I'll use my msru as control data
 ```bash
 bcftools query -i "SVLEN >= 50 || SVLEN <= -50" -i "SVTYPE == 'DEL'" -f "%CHROM\t%POS\t%END\n" \
     ~/scratch/insertion_ref/msru/data/inter_merge/grch38/strict/strict.vcf.gz \
+    | bedtools sort | bgzip > control.DEL.bed.gz
+```
+
+And now that I have the HGSVC:
+```bash
+wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HGSVC2/release/v2.0/integrated_callset/variants_freeze4_sv_insdel_alt.vcf.gz
+bcftools query -i "SVLEN >= 50 || SVLEN <= -50" -i "SVTYPE == 'DEL'" -f "%CHROM\t%POS\t%END\n" \
+    variants_freeze4_sv_insdel_alt.vcf.gz \
     | bedtools sort | bgzip > control.DEL.bed.gz
 ```
 
@@ -94,6 +104,22 @@ Counts
 Des    502
 Hot    188
 Name: anno, dtype: int64
+
+### HGSVC
+count    26792.000000
+mean         1.456965
+std          2.835152
+min          0.000000
+25%          0.000000
+50%          1.000000
+75%          2.000000
+max         53.000000
+Name: svcount, dtype: float64
+Setting HotSpot threshold at 9.96
+Counts
+Des    11334
+Hot      529
+Name: anno, dtype: int64
 ```
 
 ## Quick Summary 
@@ -128,7 +154,46 @@ Note here's the summary WITHOUT gap/cent filtering
     430 Hot
      41 Hot     Des
       2 Hot     Hot
-      1 anno    anno
+```
+
+## hgsvc summary
+```
+	ctrl	hgsv
+  14590
+   6842         Des
+    242         Hot
+    210 Des
+   4480 Des     Des
+    129 Hot
+     12 Hot     Des
+    287 Hot     Hot
+```
+
+## Three Project Summary
+```
+        ctrl    tpmd    hgsv
+  14223
+   6620                 Des
+    228                 Hot
+    252         Des
+    176         Des     Des
+     12         Des     Hot
+    115         Hot
+     46         Hot     Des
+      2         Hot     Hot
+    200 Des
+   4413 Des             Des
+      6 Des     Des
+     48 Des     Des     Des
+      4 Des     Hot
+     19 Des     Hot     Des
+    125 Hot
+     10 Hot             Des
+    283 Hot             Hot
+      4 Hot     Des
+      2 Hot     Des     Des
+      2 Hot     Des     Hot
+      2 Hot     Hot     Hot
 ```
 
 ## Finding interesting regions
