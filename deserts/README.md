@@ -71,7 +71,7 @@ bedtools intersect -a grch38.100kbwin.regions_excluded.bed.gz  -b topmed.DEL.bed
 python hotspotDesert.py control.del_svperwindow.bed control.del_svperwindow_anno.bed
 python hotspotDesert.py topmed.del_svperwindow.bed topmed.del_svperwindow_anno.bed
 ```
-Results:
+## Results
 ```
 ### Control
 count    26792.000000
@@ -127,7 +127,7 @@ Name: anno, dtype: int64
 paste control.del_svperwindow_anno.bed  topmed.del_svperwindow_anno.bed | cut -f6,12 | sort | uniq -c
 ```
 
-Results:
+MSRU vs TopMed
 ```
 	ctrl 	tpmd
   21071
@@ -156,7 +156,7 @@ Note here's the summary WITHOUT gap/cent filtering
       2 Hot     Hot
 ```
 
-## hgsvc summary
+## hgsvc summaries
 ```
 	ctrl	hgsv
   14590
@@ -167,6 +167,19 @@ Note here's the summary WITHOUT gap/cent filtering
     129 Hot
      12 Hot     Des
     287 Hot     Hot
+```
+
+```
+	hgsv	tpmd
+  14548
+    262         Des
+    119         Hot
+  11043 Des
+    226 Des     Des
+     65 Des     Hot
+    511 Hot
+     14 Hot     Des
+      4 Hot     Hot
 ```
 
 ## Three Project Summary
@@ -207,5 +220,6 @@ paste control.del_svperwindow_anno.bed topmed.del_svperwindow_anno.bed \
 ~/scratch/misc_software/AnnotSV/bin/AnnotSV -genomeBuild GRCh38 -outputDir annosv -SVinputFile dry_candidates.bed
 ```
 
+Using MSRU control: of the 54 dry candidates 39 hit gene(s)
+Using HGSVC control: of the 226 dry candidates 104 hit gene(s)
 
-of the 54 dry candidates 39 hit gene(s)
