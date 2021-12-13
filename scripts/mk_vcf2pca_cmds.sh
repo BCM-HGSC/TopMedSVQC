@@ -6,5 +6,7 @@ for i in $INDIR/*DUP*.vcf.gz
 do
     fname=$(basename $i)
     oname=$OUTDIR/${fname%.vcf.gz}.h5
-    echo python /users/u233287/scratch/topmed_analysis/scripts/vcf_to_pca.py $i $oname > $BASEDIR/jobs/pcah5_${fname}.sh
+    # Subsetting for removing samples
+    echo "bcftools view -S $BASEDIR/metadata/dup_passing_samples.txt -i \"FILTER == 'PASS'\" $i | bgzip > tmp/$fname" > $BASEDIR/jobs/pcah5_${fname}.sh
+    echo python /users/u233287/scratch/topmed_analysis/scripts/vcf_to_pca.py tmp/$fname $oname >> $BASEDIR/jobs/pcah5_${fname}.sh
 done

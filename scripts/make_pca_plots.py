@@ -18,6 +18,20 @@ anc_fn = sys.argv[1]
 dat_fn = sys.argv[2]
 out_fig = sys.argv[3]
 ancestries = pd.read_csv(anc_fn)
+# Dropped samples NWD714003
+ancestries = ancestries[~ancestries["NWDID"].isin(["NWD714003",
+                                                   "NWD170197",
+                                                   "NWD910621",
+                                                   "NWD320728",
+                                                   "NWD592708",
+                                                   "NWD859633",
+                                                   "NWD786098",
+                                                   "NWD480965",
+                                                   "NWD369359",
+                                                   "NWD719720",
+                                                   "NWD884712"
+                                                  ])
+                       ]
 sample_population = ancestries["Ancestry"]
 populations = sample_population.unique()
 

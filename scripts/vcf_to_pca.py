@@ -11,18 +11,26 @@ sns.set_style('white')
 sns.set_style('ticks')
 import pandas
 import allel
+import pysam
 print('scikit-allel', allel.__version__)
+
 
 in_name = sys.argv[1]
 out_name = sys.argv[2]
 fields = ["variants/CHROM", "variants/FILTER", "variants/POS", "variants/AF", "variants/ALT", "calldata/GT"]
-allel.vcf_to_hdf5(in_name, out_name, fields=fields, alt_number=1)
+
+# Filtering the weird sample for DUPS
+v = pysam.VariantFile(in_name)
+#samps = [_ for _ in v.header.samples if _ not in ["NWD976804"]]
+allel.vcf_to_hdf5(in_name, out_name, fields=fields, alt_number=1)#, samples=samps)
 
 
 callset = h5py.File(out_name, 'a')
 g = allel.GenotypeChunkedArray(callset["calldata/GT"])
 callset.create_group("pca")
 ac = g.count_alleles()[:]
+# DUP
+#ac = ac[callset["variants/FILTER_PASS"]]
 
 print("Num multiallelics", np.count_nonzero(ac.max_allele() > 1))
 print("Bi-allelic singletons", np.count_nonzero((ac.max_allele() == 1) & ac.is_singleton(1)))

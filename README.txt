@@ -68,7 +68,17 @@ Should look at the QC metrics on these...
 For DUPs
 >>> ancestries[pc1 > 150]
        NWDID          Ancestry
-48220  NWD976804      AFR
+48220  NWD976804      AFR  < -- super outlier
+234     NWD170197      EUR <-- mini outliers
+1585    NWD910621      EUR
+4458    NWD320728      EUR
+4577    NWD592708      EUR
+5686    NWD859633      EUR
+27763   NWD786098      EUR
+58463   NWD480965      EUR
+58521   NWD369359      EUR
+61519   NWD719720      EUR
+127853  NWD884712      AFR <-- mini
 
 DOING THE FST
 =============

@@ -23,28 +23,32 @@ lookup = {}
 prog = 0
 
 all_cd = []
+chroms = []
+positions = []
+singletons = []
+afs = []
 for fn in in_h5s:
     data = h5py.File(fn)
-    # Filter out singletons... wait.. I don't 
-    flt = np.array(data["pca"]["flt"][:])
-    # Get the variant alts
-    alts = np.array(data["variants"]["ALT"])
-    # Subset to Dels/DUPs not INV.
-    keep = alts == b'<DEL>'
-    # I don't need to do 'one'?
-    print(data['calldata/GT'].shape)
-    print(keep.shape)
-    print(flt.shape)
-    view = data["calldata/GT"][:][keep & flt]
-    print(view.shape)
-
+    view = data["calldata/GT"][:]#[keep & flt]
     all_cd.append(view)
+    
+    chroms.extend(data["variants/CHROM"][:])
+    positions.extend(data["variants/POS"][:])
+    singletons.extend(data["pca"]["flt"][:])
+    afs.extend(data["variants/AF"][:])
 
+chroms = pd.Series(chroms, name="chrom")
+positions = pd.Series(positions, name="pos")
+singletons = pd.Series(singletons, name="singleton")
+afs = pd.Series(afs, name="AF")
+data = pd.concat([chroms, positions, singletons, afs], axis=1)
+print(data)
 # Concat and turn into genotypeArray
 garr = allel.GenotypeArray(np.concatenate(all_cd))
 print(garr.shape)
 #For each of the ancestries, I need to run count_alleles...
 # if subpop >= something, I'll want to random.sample it
+
 labs = []
 ac = []
 for anc, dat in ances.groupby(["Ancestry"]):
@@ -58,20 +62,24 @@ for anc, dat in ances.groupby(["Ancestry"]):
     ac.append(garr.count_alleles(subpop=subpop))
 
 #Then do the fst
-to_save = {}
 for i, j in itertools.combinations(list(range(len(labs))), 2):
     num, den = allel.hudson_fst(ac[i], ac[j])
-    num = num[~np.isnan(num)]
-    den = den[~np.isnan(den)]
-    fst = np.sum(num) / np.sum(den)
+    num = pd.Series(num)
+    den = pd.Series(den)
+    #num = num[~np.isnan(num)]
+    #den = den[~np.isnan(den)]
     key = "%s-%s" % (labs[i], labs[j])
-    to_save[key] = {}
-    to_save[key]["num"] = num
-    to_save[key]["den"] = den
-    to_save[key]["fst"] = fst
-    print(labs[i], labs[j], fst)
+    fst_per_allele = num / den
+    fst_per_allele.name = key
+    data[key] = fst_per_allele
 
-joblib.dump(to_save, output_fn)
+    #print(fst_per_allele)
+    #fst = np.sum(num) / np.sum(den)
+    #to_save[key] = {}
+    #to_save[key]["fst"] = fst_per_allele
+    #print(labs[i], labs[j], fst)
+
+joblib.dump(data, output_fn)
 
 """
 for part, chrom in enumerate(parts):

@@ -28,15 +28,17 @@ for fn in in_h5s:
     # Get the variant alts
     # alts = np.array(data["variants"]["ALT"])[flt]
     afs = np.array(data["variants"]["AF"])[flt]
-    passing = np.array(data["variants"]["FILTER_PASS"])[flt]
+    #passing = np.array(data["variants"]["FILTER_PASS"])[flt]
     # Subset to Dels/DUPs not INV.
     # keep = alts == b'<DUP>'
-    keep = (afs >= 0.05) & (passing)
+    keep = afs >= 0.0001 #& (passing) & (afs <= 0.50)
     # PCA on those items not in LD and of svtype
+    #new_one = one.compress(data["pca"]["loc_unlinked"][keep], axis=0)
     #new_one = one.compress(data["pca"]["loc_unlinked"], axis=0)
-    new_one = one.compress(data["pca"]["loc_unlinked"][keep], axis=0)
-    print('loaded', fn, new_one.shape)
-    full_gns.append(new_one)
+    #print('loaded', fn, new_one.shape)
+    print('loaded', fn, one[keep].shape)
+    #full_gns.append(new_one)
+    full_gns.append(one[keep])
 
 gnu = np.concatenate(full_gns)
 print('final size', gnu.shape)

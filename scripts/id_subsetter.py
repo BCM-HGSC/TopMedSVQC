@@ -48,6 +48,8 @@ def other_filters(entry):
 
 fh = pysam.VariantFile(in_fn)
 n_header = fh.header
+n_header.add_line(('##INFO=<ID=MUCNVQ,Number=1,Type=Integer,'
+                  'Description="SVM Qual Score from muCNV metrics">'))
 n_header.add_line(('##FILTER=<ID=Collapse,'
                    'Description="Call collapsed due to high overlap and genotype concordance with other call">'))
 n_header.add_line(('##FILTER=<ID=LowQual,'
@@ -56,12 +58,12 @@ n_header.add_line(('##FILTER=<ID=LowQual,'
 out = pysam.VariantFile('/dev/stdout', 'w', header=n_header)
 for entry in fh:
     if entry.alts[0] != '<DUP>': continue
-    #entry = truvari.copy_entry(entry, n_header)
+    entry = truvari.copy_entry(entry, n_header)
     if entry.id not in ids.index:
         entry.filter.add("Collapse")
     else:
         n_qual = ids.loc[entry.id]
-        entry.qual = n_qual["qual"]
+        entry.info["MUCNVQ"] = int(n_qual["qual"])
         if not n_qual["pass"]:
             entry.filter.add("LowQual")
     out.write(entry)

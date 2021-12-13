@@ -3,7 +3,8 @@ import pysam
 import numpy as np
 
 
-INFILE="/stornext/snfs4/next-gen/scratch/english/round2/topmed_analysis/annosv/results/topmed.results.vcf.gz"
+#INFILE="/stornext/snfs4/next-gen/scratch/english/round2/topmed_analysis/annosv/results/topmed.results.vcf.gz"
+INFILE = sys.argv[1]
 v = pysam.VariantFile(INFILE)
 BINSIZE = 10000
 overlap = {}
