@@ -18,7 +18,7 @@ anc_fn = sys.argv[1]
 dat_fn = sys.argv[2]
 out_fig = sys.argv[3]
 ancestries = pd.read_csv(anc_fn)
-# Dropped samples NWD714003
+# Dropped samples 
 ancestries = ancestries[~ancestries["NWDID"].isin(["NWD714003",
                                                    "NWD170197",
                                                    "NWD910621",
