@@ -31,7 +31,7 @@ for fn in in_h5s:
     #passing = np.array(data["variants"]["FILTER_PASS"])[flt]
     # Subset to Dels/DUPs not INV.
     # keep = alts == b'<DUP>'
-    keep = afs >= 0.0001 #& (passing) & (afs <= 0.50)
+    keep = afs >= 0.005 #& (passing) & (afs <= 0.50)
     # PCA on those items not in LD and of svtype
     #new_one = one.compress(data["pca"]["loc_unlinked"][keep], axis=0)
     #new_one = one.compress(data["pca"]["loc_unlinked"], axis=0)
@@ -44,7 +44,7 @@ gnu = np.concatenate(full_gns)
 print('final size', gnu.shape)
 # Randomized PCA should be faster...
 # I need to figure out how to subset by SVTYPE
-coords5, model5 = allel.randomized_pca(gnu, n_components=10, scaler='patterson')
+coords5, model5 = allel.randomized_pca(gnu, n_components=4, scaler='patterson')
 joblib.dump((coords5, model5), out_data)
 
 

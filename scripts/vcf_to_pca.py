@@ -17,12 +17,12 @@ print('scikit-allel', allel.__version__)
 
 in_name = sys.argv[1]
 out_name = sys.argv[2]
-fields = ["variants/CHROM", "variants/FILTER", "variants/POS", "variants/AF", "variants/ALT", "calldata/GT"]
+fields = ["variants/CHROM", "variants/FILTER", "variants/POS", "variants/AF", "variants/SVTYPE", "calldata/GT"]
 
 # Filtering the weird sample for DUPS
 v = pysam.VariantFile(in_name)
 #samps = [_ for _ in v.header.samples if _ not in ["NWD976804"]]
-allel.vcf_to_hdf5(in_name, out_name, fields=fields, alt_number=1)#, samples=samps)
+allel.vcf_to_hdf5(in_name, out_name, fields=fields, alt_number=1, overwrite=True)#, samples=samps)
 
 
 callset = h5py.File(out_name, 'a')

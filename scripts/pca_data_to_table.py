@@ -36,4 +36,5 @@ populations = sample_population.unique()
 coords5, model5 = joblib.load(dat_fn)
 
 d = pd.DataFrame(coords5, index=sample_population, columns=["PC%d" % x for x in range(1, 11)])
+d = d.round(1)
 d.to_csv("temp.csv")
