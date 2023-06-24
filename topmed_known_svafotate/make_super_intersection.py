@@ -1,15 +1,25 @@
+import sys
 import pandas as pd
 import truvari
 import joblib
 
 data = pd.read_csv("new.svafotate.bed.gz", sep='\t')
-DOSINGLE=False
+DOSINGLE, outname = sys.argv[1:]
+DOSINGLE = int(DOSINGLE)
+# 0 - 'all' 
+# 1 - 'singletons'
+# 2 - 'non-singletons'
 
 sources = list(data["SOURCE"].unique())
 svtypes = ["DEL", "DUP", "INV"]
 
-if DOSINGLE:
-    data = data[(data['Het'] + data['HomAlt']) == 1]
+if DOSINGLE == 1:
+    a_data = data[(data['Het'] + data['HomAlt']) == 1]
+elif DOSINGLE == 2:
+    a_data = data[(data['Het'] + data['HomAlt']) != 1]
+else:
+    a_data = data
+
 rows = []
 for asrc in sources:
     for bsrc in sources:
@@ -17,7 +27,7 @@ for asrc in sources:
             continue
         for svt in svtypes:
             print(asrc, bsrc, svt)
-            adat = data[(data["SOURCE"] == asrc) & (data["SVTYPE"] == svt)]
+            adat = a_data[(a_data["SOURCE"] == asrc) & (a_data["SVTYPE"] == svt)]
             bdat = data[(data["SOURCE"] == bsrc) & (data["SVTYPE"] == svt)]
             adat[["#CHROM", "START", "END"]].to_csv("a.bed", sep='\t', index=False, header=False)
             bdat[["#CHROM", "START", "END"]].to_csv("b.bed", sep='\t', index=False, header=False)
@@ -27,7 +37,7 @@ for asrc in sources:
 for asrc in sources:
     for svt in svtypes:
         print(asrc, 'allother', svt)
-        adat = data[(data["SOURCE"] == asrc) & (data["SVTYPE"] == svt)]
+        adat = a_data[(a_data["SOURCE"] == asrc) & (a_data["SVTYPE"] == svt)]
         bdat = data[(data["SOURCE"] != asrc) & (data["SVTYPE"] == svt)]
         adat[["#CHROM", "START", "END"]].to_csv("a.bed", sep='\t', index=False, header=False)
         bdat[["#CHROM", "START", "END"]].to_csv("b.bed", sep='\t', index=False, header=False)
@@ -35,9 +45,4 @@ for asrc in sources:
         rows.append([asrc, 'allother', svt, len(adat), len(bdat), int(ret.stdout.strip())])
 
 rows = pd.DataFrame(rows, columns=["a_src", "b_src", "svtype", "a_cnt", "b_cnt", "ab_ovl"])
-if DOSINGLE:
-    joblib.dump(rows, "biginter_single.jl")
-else:
-    joblib.dump(rows, "biginter.jl")
-
-
+joblib.dump(rows, outname)
