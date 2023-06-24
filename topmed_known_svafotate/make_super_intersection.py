@@ -4,6 +4,9 @@ import truvari
 import joblib
 
 data = pd.read_csv("new.svafotate.bed.gz", sep='\t')
+data['#CHROM'] = data['#CHROM'].astype(str)
+keep_chrs = [str(_) for _ in range(1, 23)]
+data = data[data["#CHROM"].isin(keep_chrs)].copy()
 DOSINGLE, outname = sys.argv[1:]
 DOSINGLE = int(DOSINGLE)
 # 0 - 'all' 
@@ -14,9 +17,9 @@ sources = list(data["SOURCE"].unique())
 svtypes = ["DEL", "DUP", "INV"]
 
 if DOSINGLE == 1:
-    a_data = data[(data['Het'] + data['HomAlt']) == 1]
+    a_data = data[(data['Het'] + data['HomAlt']) == 1].copy()
 elif DOSINGLE == 2:
-    a_data = data[(data['Het'] + data['HomAlt']) != 1]
+    a_data = data[(data['Het'] + data['HomAlt']) != 1].copy()
 else:
     a_data = data
 

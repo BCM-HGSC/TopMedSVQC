@@ -5,6 +5,7 @@ import numpy as np
 
 out_frame = {}
 d = joblib.load(sys.argv[1])
+oname = sys.argv[2]
 aidx = list(d['a_src'].unique())
 bidx = list(d['b_src'].unique())
 d['a_idx'] = d['a_src'].apply(lambda x: aidx.index(x))
@@ -30,4 +31,4 @@ for svtype in ["DEL", "DUP", "INV"]:
 
 print("Total Counts")
 print(d[['a_src', 'svtype', 'a_cnt']].sort_values(['a_src', 'svtype', 'a_cnt']).drop_duplicates())
-joblib.dump(out_frame, "known_intersect.jl")
+joblib.dump(out_frame, oname)
